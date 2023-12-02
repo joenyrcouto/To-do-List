@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <title>To-Do List</title>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h1 style="text-align: center; margin-bottom: 40px;">To-Do List</h1>
+        <!-- Menu -->
+        <nav style="background-color: black; height: auto; text-align: center; padding-top: 10px; padding-bottom: 10px; border-radius: 12px;">
+            <ul class="nav" style="display: flex;">
+                <li class="nav-item" style="flex: 1;">
+                    <button class='btn btn-primary' style='width: 200px; background-color: #134692df; border-color: #2b3297df;' onclick="showPage('main')">Página Principal</button>
+                </li>
+                <li class="nav-item" style="flex: 1;">
+                    <button class='btn btn-primary' style='width: 200px; background-color: #ffffffdf; border-color: #ffffffdf;' onclick="showPage('cadastro')">Cadastro</button>
+                </li>
+                <li class="nav-item" style="flex: 1;">
+                    <button class='btn btn-primary' style='width: 200px; background-color: #ffffffdf; border-color: #ffffffdf;' onclick="showPage('exclusao')">Exclusão</button>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo da Página -->
+        <div id="mainPage">
+            <!-- Itens Cadastrados -->
+            <div id="todoList" class="mt-4">
+                <!-- Aqui serão exibidos os itens cadastrados dinamicamente -->
+            </div>
+        </div>
+
+        <div id="cadastroPage" style="display: none;">
+            <!-- Formulário de Cadastro -->
+            <form id="addItemForm" class="mt-4">
+                <div class="form-group">
+                    <label for="newItem">Novo Item:</label>
+                    <input type="text" class="form-control" id="newItem" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Adicionar Item</button>
+            </form>
+        </div>
+
+        <div id="exclusaoPage" style="display: none;">
+            <!-- Lista de Itens com Opção de Editar/Excluir -->
+            <div id="deleteEditList" class="mt-4">
+                <!-- Aqui serão exibidos os itens com opção de editar/excluir -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Exemplo de dados para teste
+        const todoItems = [
+            { id: 1, text: 'Tarefa 1', completed: false },
+            { id: 2, text: 'Tarefa 2', completed: true },
+            // Adicione mais itens conforme necessário
+        ];
+
+        // Função para exibir os itens cadastrados na página
+        function displayTodoList() {
+            const todoListContainer = document.getElementById('todoList');
+            todoListContainer.innerHTML = ''; // Limpar conteúdo atual
+
+            todoItems.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.className = 'form-check';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'form-check-input';
+                checkbox.checked = item.completed;
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.textContent = item.text;
+
+                listItem.appendChild(checkbox);
+                listItem.appendChild(label);
+
+                todoListContainer.appendChild(listItem);
+            });
+        }
+
+        // Função para mostrar a página correspondente
+        function showPage(page) {
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('cadastroPage').style.display = 'none';
+            document.getElementById('exclusaoPage').style.display = 'none';
+
+            if (page === 'main') {
+                document.getElementById('mainPage').style.display = 'block';
+                displayTodoList();
+            } else if (page === 'cadastro') {
+                document.getElementById('cadastroPage').style.display = 'block';
+            } else if (page === 'exclusao') {
+                document.getElementById('exclusaoPage').style.display = 'block';
+                displayDeleteEditList();
+            }
+        }
+
+        // Adiciona um novo item à lista
+        document.getElementById('addItemForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const newItemText = document.getElementById('newItem').value;
+            if (newItemText.trim() !== '') {
+                const newItem = { id: todoItems.length + 1, text: newItemText, completed: false };
+                todoItems.push(newItem);
+                displayTodoList();
+                document.getElementById('addItemForm').reset();
+            }
+        });
+
+        // Exibe a lista com opção de editar/excluir
+        function displayDeleteEditList() {
+            const deleteEditListContainer = document.getElementById('deleteEditList');
+            deleteEditListContainer.innerHTML = ''; // Limpar conteúdo atual
+
+            todoItems.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.className = 'form-check';
+
+                const editButton = document.createElement('button');
+                editButton.className = 'btn btn-warning btn-sm';
+                editButton.textContent = 'Editar';
+                editButton.addEventListener('click', () => editItem(item.id));
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger btn-sm ml-2';
+                deleteButton.textContent = 'Excluir';
+                deleteButton.addEventListener('click', () => deleteItem(item.id));
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.textContent = item.text;
+
+                listItem.appendChild(label);
+                listItem.appendChild(editButton);
+                listItem.appendChild(deleteButton);
+
+                deleteEditListContainer.appendChild(listItem);
+            });
+        }
+
+        // Edita um item da lista
+        function editItem(itemId) {
+            const newText = prompt('Editar item:');
+            if (newText !== null && newText.trim() !== '') {
+                const editedItem = todoItems.find(item => item.id === itemId);
+                if (editedItem) {
+                    editedItem.text = newText;
+                    displayDeleteEditList();
+                }
+            }
+        }
+
+        // Exclui um item da lista
+        function deleteItem(itemId) {
+            const confirmDelete = confirm('Deseja excluir este item?');
+            if (confirmDelete) {
+                const itemIndex = todoItems.findIndex(item => item.id === itemId);
+                if (itemIndex !== -1) {
+                    todoItems.splice(itemIndex, 1);
+                    displayDeleteEditList();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

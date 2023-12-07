@@ -5,23 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: blanchedalmond;
+        }
+        .active {
+            background-color: rgb(244, 131, 66) !important;
+            border-color: rgb(244, 131, 66) !important;
+            color: white !important;
+        }
+        label {
+        font-size: 30px;
+        }
+        input[type="checkbox"]:checked + label {
+        text-decoration: line-through;
+        font-size: 30px;
+        }
+        input[type="checkbox"] {
+        position: absolute;
+        top: 41%;
+        left: 1%;
+        transform: translate(-50%, -50%);
+        height: 25px;
+        width: 25px;
+        border-radius: 2px; /* Garante que a cor de fundo esteja contida dentro da caixa de seleção */
+        text-align: center;
+}
+        input[type="checkbox"]:checked::before {
+        content: '\2713'; /* Código do caractere Unicode para um "check" (você pode ajustar conforme necessário) */
+        font-size: 16px; /* Tamanho da marca de seleção */
+        color: rgb(255, 255, 255); /* Cor da marca de seleção quando está marcado */
+        background-color: rgb(244, 131, 66); /* Cor de fundo da marca de seleção quando está marcado */
+        position: absolute;
+        top: 50%;
+        left: 47%;
+        transform: translate(-50%, -50%);
+        height: 25px;
+        width: 25px;
+        border-radius: 2px; /* Garante que a cor de fundo esteja contida dentro da caixa de seleção */
+        text-align: center;
+}
+        /* Adicione a margem inferior aos textos dos itens */
+        #textColumn .form-check {
+        margin-bottom: 8px;
+        }
+        /* Adicione a margem inferior aos botões de editar/excluir */
+        #buttonColumn .form-check {
+        margin-top: 16px;
+        height: 38px;
+        }
+    </style>
     <title>To-Do List</title>
 </head>
 <body>
-
     <div class="container mt-5">
-        <h1 style="text-align: center; margin-bottom: 40px;">To-Do List</h1>
+        <h1 style="text-align: center; margin-bottom: 40px; font-weight: 250; font-size: 50px;">To-Do List</h1>
         <!-- Menu -->
         <nav style="background-color: black; height: auto; text-align: center; padding-top: 10px; padding-bottom: 10px; border-radius: 12px;">
             <ul class="nav" style="display: flex;">
                 <li class="nav-item" style="flex: 1;">
-                    <button class='btn btn-primary' style='width: 200px; background-color: #134692df; border-color: #2b3297df;' onclick="showPage('main')">Página Principal</button>
+                    <button id="mainButton" class='btn btn-primary active' style='width: 200px; background-color: white; border-color: white; color: black;' onclick="showPage('main')">Página Principal</button>
                 </li>
                 <li class="nav-item" style="flex: 1;">
-                    <button class='btn btn-primary' style='width: 200px; background-color: #ffffffdf; border-color: #ffffffdf;' onclick="showPage('cadastro')">Cadastro</button>
+                    <button id="cadastroButton" class='btn btn-primary' style='width: 200px; background-color: white; border-color: white; color: black;' onclick="showPage('cadastro')">Cadastro</button>
                 </li>
                 <li class="nav-item" style="flex: 1;">
-                    <button class='btn btn-primary' style='width: 200px; background-color: #ffffffdf; border-color: #ffffffdf;' onclick="showPage('exclusao')">Exclusão</button>
+                    <button id="exclusaoButton" class='btn btn-primary' style='width: 200px; background-color: white; border-color: white; color: black;' onclick="showPage('exclusao')">Exclusão</button>
                 </li>
             </ul>
         </nav>
@@ -41,15 +90,28 @@
                     <label for="newItem">Novo Item:</label>
                     <input type="text" class="form-control" id="newItem" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Adicionar Item</button>
+                <button type="submit" class="btn btn-primary" style="background-color: rgb(244, 131, 66); border-color: rgb(244, 131, 66);">Adicionar Item</button>
             </form>
         </div>
 
         <div id="exclusaoPage" style="display: none;">
             <!-- Lista de Itens com Opção de Editar/Excluir -->
-            <div id="deleteEditList" class="mt-4">
-                <!-- Aqui serão exibidos os itens com opção de editar/excluir -->
+<div id="deleteEditList" class="mt-4">
+    <div class="row">
+        <!-- Coluna de Textos dos Itens -->
+        <div class="col-md-6">
+            <div id="textColumn">
+                <!-- Aqui serão exibidos os textos dos itens -->
             </div>
+        </div>
+        <!-- Coluna de Botões de Editar/Excluir -->
+        <div class="col-md-6">
+            <div id="buttonColumn">
+                <!-- Aqui serão exibidos os botões de editar/excluir -->
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -64,6 +126,21 @@
             { id: 2, text: 'Tarefa 2', completed: true },
             // Adicione mais itens conforme necessário
         ];
+
+        // Variável global para armazenar a página atual
+        let currentPage = 'main'; // Página padrão
+
+        // Verificar se há dados armazenados localmente e carregar se houver
+        const storedItems = JSON.parse(localStorage.getItem('todoItems'));
+        if (storedItems) {
+            todoItems.length = 0; // Limpar os itens existentes
+            Array.prototype.push.apply(todoItems, storedItems);
+        }
+
+        // Função para salvar os itens no armazenamento local
+        function saveItemsToLocal() {
+            localStorage.setItem('todoItems', JSON.stringify(todoItems));
+        }
 
         // Função para exibir os itens cadastrados na página
         function displayTodoList() {
@@ -87,11 +164,32 @@
                 listItem.appendChild(label);
 
                 todoListContainer.appendChild(listItem);
+
+                // Adicionar evento de clique no checkbox para marcar/desmarcar o item
+                checkbox.addEventListener('change', function() {
+                    updateItemStatus(item.id, checkbox.checked);
+                });
+
+                listItem.appendChild(checkbox);
+                listItem.appendChild(label);
+
+                todoListContainer.appendChild(listItem);
             });
         }
 
+        // Exibir a lista quando a página é carregada
+        displayTodoList();
+
         // Função para mostrar a página correspondente
         function showPage(page) {
+            // Remover a classe 'active' de todos os botões
+            document.querySelectorAll('.nav-item button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Adicionar a classe 'active' ao botão selecionado
+            document.getElementById(`${page}Button`).classList.add('active');
+
             document.getElementById('mainPage').style.display = 'none';
             document.getElementById('cadastroPage').style.display = 'none';
             document.getElementById('exclusaoPage').style.display = 'none';
@@ -105,6 +203,9 @@
                 document.getElementById('exclusaoPage').style.display = 'block';
                 displayDeleteEditList();
             }
+
+            // Atualizar a variável currentPage
+            currentPage = page;
         }
 
         // Adiciona um novo item à lista
@@ -115,18 +216,32 @@
                 const newItem = { id: todoItems.length + 1, text: newItemText, completed: false };
                 todoItems.push(newItem);
                 displayTodoList();
+                saveItemsToLocal(); // Salvar no armazenamento local
                 document.getElementById('addItemForm').reset();
             }
         });
 
         // Exibe a lista com opção de editar/excluir
         function displayDeleteEditList() {
-            const deleteEditListContainer = document.getElementById('deleteEditList');
-            deleteEditListContainer.innerHTML = ''; // Limpar conteúdo atual
+            const textColumn = document.getElementById('textColumn');
+            const buttonColumn = document.getElementById('buttonColumn');
+
+            textColumn.innerHTML = ''; // Limpar conteúdo atual
+            buttonColumn.innerHTML = ''; // Limpar conteúdo atual
 
             todoItems.forEach(item => {
-                const listItem = document.createElement('div');
-                listItem.className = 'form-check';
+                const textItem = document.createElement('div');
+                textItem.className = 'form-check';
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.textContent = item.text;
+
+                textItem.appendChild(label);
+                textColumn.appendChild(textItem);
+
+                const buttonItem = document.createElement('div');
+                buttonItem.className = 'form-check';
 
                 const editButton = document.createElement('button');
                 editButton.className = 'btn btn-warning btn-sm';
@@ -138,15 +253,9 @@
                 deleteButton.textContent = 'Excluir';
                 deleteButton.addEventListener('click', () => deleteItem(item.id));
 
-                const label = document.createElement('label');
-                label.className = 'form-check-label';
-                label.textContent = item.text;
-
-                listItem.appendChild(label);
-                listItem.appendChild(editButton);
-                listItem.appendChild(deleteButton);
-
-                deleteEditListContainer.appendChild(listItem);
+                buttonItem.appendChild(editButton);
+                buttonItem.appendChild(deleteButton);
+                buttonColumn.appendChild(buttonItem);
             });
         }
 
@@ -158,6 +267,7 @@
                 if (editedItem) {
                     editedItem.text = newText;
                     displayDeleteEditList();
+                    saveItemsToLocal(); // Salvar no armazenamento local
                 }
             }
         }
@@ -170,7 +280,19 @@
                 if (itemIndex !== -1) {
                     todoItems.splice(itemIndex, 1);
                     displayDeleteEditList();
+                    saveItemsToLocal(); // Salvar no armazenamento local
                 }
+            }
+        }
+
+        // Atualiza o status do item
+        function updateItemStatus(itemId, completed) {
+            const item = todoItems.find(item => item.id === itemId);
+            if (item) {
+                item.completed = completed;
+                displayTodoList(); // Atualiza a lista na página principal
+                displayDeleteEditList(); // Atualiza a lista na seção de exclusão
+                saveItemsToLocal(); // Salvar no armazenamento local
             }
         }
     </script>
